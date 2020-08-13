@@ -1,0 +1,14 @@
+{
+  "result": {
+    "item": "shrouds:shroud"
+  },
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:beacon"
+    },
+    {
+      "item": "minecraft:phantom_membrane"
+    }
+  ]
+}
