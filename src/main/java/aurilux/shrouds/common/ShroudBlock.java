@@ -1,6 +1,8 @@
 package aurilux.shrouds.common;
 
 import net.minecraft.block.*;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.material.MaterialColor;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.INamedContainerProvider;
@@ -15,17 +17,37 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
-public class ShroudBlock extends Block implements IBeaconBeamColorProvider {
-    public ShroudBlock(Properties properties) {
-        super(properties);
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+public class ShroudBlock extends ContainerBlock implements IBeaconBeamColorProvider {
+    public ShroudBlock() {
+        super(Block.Properties.create(Material.GLASS, MaterialColor.DIAMOND)
+                .hardnessAndResistance(3.0F).setLightLevel(s -> 15).notSolid());
     }
 
+    @Nonnull
     @Override
     public DyeColor getColor() {
-        return DyeColor.BLACK;
+        return DyeColor.GRAY;
     }
 
     @Override
+    @Nullable
+    @ParametersAreNonnullByDefault
+    public TileEntity createNewTileEntity(IBlockReader worldIn) {
+        return ModObjects.SHROUD_TILE.get().create();
+    }
+
+    @Nonnull
+    @Override
+    public BlockRenderType getRenderType(@Nonnull BlockState state) {
+        return BlockRenderType.MODEL;
+    }
+
+    @Override
+    @ParametersAreNonnullByDefault
     public boolean eventReceived(BlockState state, World worldIn, BlockPos pos, int id, int param) {
         super.eventReceived(state, worldIn, pos, id, param);
         TileEntity tileentity = worldIn.getTileEntity(pos);
@@ -33,12 +55,15 @@ public class ShroudBlock extends Block implements IBeaconBeamColorProvider {
     }
 
     @Override
+    @ParametersAreNonnullByDefault
     public INamedContainerProvider getContainer(BlockState state, World worldIn, BlockPos pos) {
         TileEntity tileentity = worldIn.getTileEntity(pos);
         return tileentity instanceof INamedContainerProvider ? (INamedContainerProvider)tileentity : null;
     }
 
+    @Nonnull
     @Override
+    @ParametersAreNonnullByDefault
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (!worldIn.isRemote) {
             TileEntity tileentity = worldIn.getTileEntity(pos);
@@ -46,32 +71,19 @@ public class ShroudBlock extends Block implements IBeaconBeamColorProvider {
                 player.openContainer((ShroudTitleEntity) tileentity);
                 player.addStat(Stats.INTERACT_WITH_BEACON);
             }
+            return ActionResultType.CONSUME;
         }
         return ActionResultType.SUCCESS;
     }
 
     @Override
-    public boolean isNormalCube(BlockState state, IBlockReader worldIn, BlockPos pos) {
-        return false;
-    }
-
-    @Override
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+    @ParametersAreNonnullByDefault
+    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         if (stack.hasDisplayName()) {
             TileEntity tileentity = worldIn.getTileEntity(pos);
             if (tileentity instanceof ShroudTitleEntity) {
                 ((ShroudTitleEntity) tileentity).setCustomName(stack.getDisplayName());
             }
         }
-    }
-
-    @Override
-    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return ModObjects.SHROUD_TILE.get().create();
-    }
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
     }
 }

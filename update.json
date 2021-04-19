@@ -2,7 +2,12 @@
     "homepage": "https://github.com/Aurilux/Shrouds",
     "promos": {
         "1.15.2-latest": "1.0.0",
-        "1.15.2-recommended": "1.0.0"
+        "1.15.2-recommended": "1.0.0",
+        "1.16.5-latest": "1.1.0",
+        "1.16.5-recommended": "1.1.0"
+    },
+    "1.16.5": {
+        "1.1.0": "See https://www.curseforge.com/minecraft/mc-mods/shrouds/files for detailed information."
     },
     "1.15.2": {
         "1.0.0": "See https://www.curseforge.com/minecraft/mc-mods/shrouds/files for detailed information."

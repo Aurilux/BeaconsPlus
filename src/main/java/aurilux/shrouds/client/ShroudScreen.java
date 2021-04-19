@@ -1,11 +1,14 @@
 package aurilux.shrouds.client;
 
-import aurilux.shrouds.common.PacketHandler;
-import aurilux.shrouds.common.PacketUpdateShroud;
+import aurilux.shrouds.common.ModObjects;
 import aurilux.shrouds.common.ShroudContainer;
 import aurilux.shrouds.common.ShroudTitleEntity;
+import aurilux.shrouds.common.network.PacketHandler;
+import aurilux.shrouds.common.network.messages.PacketUpdateShroud;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.AbstractButton;
@@ -18,12 +21,16 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.play.client.CCloseWindowPacket;
 import net.minecraft.potion.Effect;
-import net.minecraft.potion.Effects;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+
+import javax.annotation.Nonnull;
 
 @OnlyIn(Dist.CLIENT)
 public class ShroudScreen extends ContainerScreen<ShroudContainer> {
@@ -39,15 +46,15 @@ public class ShroudScreen extends ContainerScreen<ShroudContainer> {
         this.ySize = 219;
         container.addListener(new IContainerListener() {
             @Override
-            public void sendAllContents(Container containerToSend, NonNullList<ItemStack> itemsList) {
+            public void sendAllContents(@Nonnull Container containerToSend, @Nonnull NonNullList<ItemStack> itemsList) {
             }
 
             @Override
-            public void sendSlotContents(Container containerToSend, int slotInd, ItemStack stack) {
+            public void sendSlotContents(@Nonnull Container containerToSend, int slotInd, @Nonnull ItemStack stack) {
             }
 
             @Override
-            public void sendWindowProperty(Container containerIn, int varToUpdate, int newValue) {
+            public void sendWindowProperty(@Nonnull Container containerIn, int varToUpdate, int newValue) {
                 ShroudScreen.this.primaryEffect = container.getPrimaryEffect();
                 ShroudScreen.this.secondaryEffect = container.getSecondaryEffect();
                 ShroudScreen.this.buttonsNotDrawn = true;
@@ -119,38 +126,39 @@ public class ShroudScreen extends ContainerScreen<ShroudContainer> {
     }
 
     @Override
-    protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        this.drawCenteredString(this.font, I18n.format("block.minecraft.beacon.primary"), 62, 10, 14737632);
-        this.drawCenteredString(this.font, I18n.format("block.minecraft.beacon.secondary"), 169, 10, 14737632);
+    protected void drawGuiContainerForegroundLayer(@Nonnull MatrixStack matrixStack, int mouseX, int mouseY) {
+        drawCenteredString(matrixStack, this.font, I18n.format("block.minecraft.beacon.primary"), 62, 10, 14737632);
+        drawCenteredString(matrixStack, this.font, I18n.format("block.minecraft.beacon.secondary"), 169, 10, 14737632);
 
         for (Widget widget : this.buttons) {
             if (widget.isHovered()) {
-                widget.renderToolTip(mouseX - this.guiLeft, mouseY - this.guiTop);
+                widget.renderToolTip(matrixStack, mouseX - this.guiLeft, mouseY - this.guiTop);
                 break;
             }
         }
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+    protected void drawGuiContainerBackgroundLayer(@Nonnull MatrixStack matrixStack, float partialTicks, int mouseX, int mouseY) {
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        this.minecraft.getTextureManager().bindTexture(BEACON_GUI_TEXTURES);
+        getMinecraft().getTextureManager().bindTexture(BEACON_GUI_TEXTURES);
         int xCoord = (this.width - this.xSize) / 2;
         int yCoord = (this.height - this.ySize) / 2;
-        this.blit(xCoord, yCoord, 0, 0, this.xSize, this.ySize);
+        this.blit(matrixStack, xCoord, yCoord, 0, 0, this.xSize, this.ySize);
         this.itemRenderer.zLevel = 100.0F;
+        this.itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(Items.NETHERITE_INGOT), xCoord + 20, yCoord + 109);
         this.itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(Items.EMERALD), xCoord + 42, yCoord + 109);
-        this.itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(Items.DIAMOND), xCoord + 42 + 22, yCoord + 109);
-        this.itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(Items.GOLD_INGOT), xCoord + 42 + 44, yCoord + 109);
-        this.itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(Items.IRON_INGOT), xCoord + 42 + 66, yCoord + 109);
+        this.itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(Items.DIAMOND), xCoord + 64, yCoord + 109);
+        this.itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(Items.GOLD_INGOT), xCoord + 86, yCoord + 109);
+        this.itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(Items.IRON_INGOT), xCoord + 108, yCoord + 109);
         this.itemRenderer.zLevel = 0.0F;
     }
 
     @Override
-    public void render(int mouseX, int mouseZ, float ticks) {
-        this.renderBackground();
-        super.render(mouseX, mouseZ, ticks);
-        this.renderHoveredToolTip(mouseX, mouseZ);
+    public void render(@Nonnull MatrixStack matrixStack, int mouseX, int mouseY, float ticks) {
+        this.renderBackground(matrixStack);
+        super.render(matrixStack, mouseX, mouseY, ticks);
+        this.renderHoveredTooltip(matrixStack, mouseX, mouseY);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -158,10 +166,10 @@ public class ShroudScreen extends ContainerScreen<ShroudContainer> {
         private boolean selected;
 
         protected Button(int x, int y) {
-            super(x, y, 22, 22, "");
+            super(x, y, 22, 22, StringTextComponent.EMPTY);
         }
 
-        public void renderButton(int backX, int backY, float partial) {
+        public void renderButton(@Nonnull MatrixStack matrixStack, int backX, int backY, float partial) {
             Minecraft.getInstance().getTextureManager().bindTexture(ShroudScreen.BEACON_GUI_TEXTURES);
             RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
             int j = 0;
@@ -175,11 +183,11 @@ public class ShroudScreen extends ContainerScreen<ShroudContainer> {
                 j += this.width * 3;
             }
 
-            this.blit(this.x, this.y, j, 219, this.width, this.height);
-            this.blitButton();
+            this.blit(matrixStack, this.x, this.y, j, 219, this.width, this.height);
+            this.blitButton(matrixStack);
         }
 
-        protected abstract void blitButton();
+        protected abstract void blitButton(MatrixStack matrixStack);
 
         public boolean isSelected() {
             return this.selected;
@@ -195,12 +203,22 @@ public class ShroudScreen extends ContainerScreen<ShroudContainer> {
         private final Effect effect;
         private final TextureAtlasSprite textureSprite;
         private final boolean isPrimary;
+        private final ITextComponent text;
 
         public PowerButton(int x, int y, Effect effectIn, boolean primary) {
             super(x, y);
             this.effect = effectIn;
             this.textureSprite = Minecraft.getInstance().getPotionSpriteUploader().getSprite(effectIn);
             this.isPrimary = primary;
+            this.text = makeText(effectIn, primary);
+        }
+
+        private ITextComponent makeText(Effect effect1, boolean primary) {
+            IFormattableTextComponent comp = new TranslationTextComponent(effect1.getName());
+            if (!primary && effect1 != ModObjects.DAMPEN.get()) {
+                comp.appendString(" II");
+            }
+            return comp;
         }
 
         @Override
@@ -221,19 +239,14 @@ public class ShroudScreen extends ContainerScreen<ShroudContainer> {
         }
 
         @Override
-        public void renderToolTip(int x, int y) {
-            String s = I18n.format(this.effect.getName());
-            if (!this.isPrimary && this.effect != Effects.REGENERATION) {
-                s = s + " II";
-            }
-
-            ShroudScreen.this.renderTooltip(s, x, y);
+        public void renderToolTip(@Nonnull MatrixStack matrixStack, int x, int y) {
+            ShroudScreen.this.renderTooltip(matrixStack, this.text, x, y);
         }
 
         @Override
-        protected void blitButton() {
+        protected void blitButton(MatrixStack matrixStack) {
             Minecraft.getInstance().getTextureManager().bindTexture(textureSprite.getAtlasTexture().getTextureLocation());
-            blit(this.x + 2, this.y + 2, this.getBlitOffset(), 18, 18, this.textureSprite);
+            blit(matrixStack, this.x + 2, this.y + 2, this.getBlitOffset(), 18, 18, this.textureSprite);
         }
     }
 
@@ -249,8 +262,8 @@ public class ShroudScreen extends ContainerScreen<ShroudContainer> {
         }
 
         @Override
-        protected void blitButton() {
-            this.blit(this.x + 2, this.y + 2, this.offsetX, this.offsetY, 18, 18);
+        protected void blitButton(MatrixStack matrixStack) {
+            this.blit(matrixStack, this.x + 2, this.y + 2, this.offsetX, this.offsetY, 18, 18);
         }
     }
 
@@ -268,8 +281,8 @@ public class ShroudScreen extends ContainerScreen<ShroudContainer> {
         }
 
         @Override
-        public void renderToolTip(int x, int y) {
-            ShroudScreen.this.renderTooltip(I18n.format("gui.done"), x, y);
+        public void renderToolTip(@Nonnull MatrixStack matrixStack, int x, int y) {
+            ShroudScreen.this.renderTooltip(matrixStack, DialogTexts.GUI_DONE, x, y);
         }
     }
 
@@ -284,8 +297,9 @@ public class ShroudScreen extends ContainerScreen<ShroudContainer> {
             ShroudScreen.this.minecraft.displayGuiScreen(null);
         }
 
-        public void renderToolTip(int x, int y) {
-            ShroudScreen.this.renderTooltip(I18n.format("gui.cancel"), x, y);
+        @Override
+        public void renderToolTip(@Nonnull MatrixStack matrixStack, int x, int y) {
+            ShroudScreen.this.renderTooltip(matrixStack, DialogTexts.GUI_CANCEL, x, y);
         }
     }
 }

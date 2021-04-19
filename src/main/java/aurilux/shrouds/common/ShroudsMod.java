@@ -2,6 +2,7 @@ package aurilux.shrouds.common;
 
 import aurilux.shrouds.client.ShroudScreen;
 import aurilux.shrouds.client.ShroudTileEntityRenderer;
+import aurilux.shrouds.common.network.PacketHandler;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
@@ -16,12 +17,15 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
+
 @Mod(ShroudsMod.ID)
 public class ShroudsMod {
     public static final String ID = "shrouds";
     public static final Logger LOG = LogManager.getLogger(ID.toUpperCase());
 
     public static ItemGroup itemGroup = new ItemGroup(ID) {
+        @Nonnull
         @Override
         public ItemStack createIcon() {
             return new ItemStack(ModObjects.SHROUD_BLOCK.get());
@@ -41,7 +45,7 @@ public class ShroudsMod {
     }
 
     private void clientSetup(FMLClientSetupEvent event) {
-        RenderTypeLookup.setRenderLayer(ModObjects.SHROUD_BLOCK.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(ModObjects.SHROUD_BLOCK.get(), RenderType.getTranslucent());
         ClientRegistry.bindTileEntityRenderer(ModObjects.SHROUD_TILE.get(), ShroudTileEntityRenderer::new);
         ScreenManager.registerFactory(ModObjects.SHROUD_CONTAINER.get(), ShroudScreen::new);
     }

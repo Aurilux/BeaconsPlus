@@ -1,58 +1,83 @@
 package aurilux.shrouds.common;
 
-import net.minecraft.entity.IProjectile;
+import net.minecraft.entity.AreaEffectCloudEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.monster.IMob;
-import net.minecraft.entity.projectile.AbstractArrowEntity;
-import net.minecraft.entity.projectile.ThrowableEntity;
+import net.minecraft.entity.monster.CreeperEntity;
+import net.minecraft.entity.monster.EndermanEntity;
+import net.minecraft.entity.monster.ShulkerEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.living.PotionEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.EnderTeleportEvent;
+import net.minecraftforge.event.entity.player.CriticalHitEvent;
+import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = ShroudsMod.ID)
 public class CommonEventHandler {
     @SubscribeEvent
-    public static void onLivingHurt(LivingHurtEvent event) {
+    public static void onEnderTeleport(EnderTeleportEvent event) {
         LivingEntity entity = event.getEntityLiving();
-        if (event.getSource().equals(DamageSource.FALL) && entity.isPotionActive(ModObjects.WEIGHT.get())) {
-            EffectInstance weightEffect = entity.getActivePotionEffect(ModObjects.WEIGHT.get());
-            event.setAmount(event.getAmount() * (2 + weightEffect.getAmplifier()));
+        if (entity.isPotionActive(ModObjects.BINDING.get())) {
+            int amplifier = entity.getActivePotionEffect(ModObjects.BINDING.get()).getAmplifier();
+            if (entity instanceof EndermanEntity || (entity instanceof ShulkerEntity && amplifier > 0)) {
+                event.setCanceled(true);
+            }
         }
     }
 
     @SubscribeEvent
-    public static void onPotionEffect(PotionEvent.PotionAddedEvent event) {
-        LivingEntity entity = event.getEntityLiving();
-        EffectInstance effect = event.getPotionEffect();
-        if (entity instanceof IMob && effect.getPotion().equals(Effects.BLINDNESS)) {
-            effect.getPotion().addAttributesModifier(SharedMonsterAttributes.FOLLOW_RANGE,
-                    "ed8873f3-8281-4170-aa18-87a65805b318",
-                    -.5D - (.25 * effect.getAmplifier()),
-                    AttributeModifier.Operation.MULTIPLY_TOTAL);
+    public static void onCriticalHit(CriticalHitEvent event) {
+        if (!(event.getTarget() instanceof LivingEntity)) {
+            return;
+        }
+
+        LivingEntity entity = (LivingEntity) event.getTarget();
+        if (entity.isPotionActive(ModObjects.FRAILTY.get())) {
+            event.setDamageModifier(event.getDamageModifier()
+                    + (.5f * (entity.getActivePotionEffect(ModObjects.FRAILTY.get()).getAmplifier() + 1)));
         }
     }
 
-    public static float nauseaInaccuracy(IProjectile projectile) {
-        LivingEntity entity = null;
-        if (projectile instanceof ThrowableEntity) {
-            ThrowableEntity te = (ThrowableEntity) projectile;
-            entity = te.getThrower();
-        }
-        else if (projectile instanceof AbstractArrowEntity) {
-            AbstractArrowEntity aae = (AbstractArrowEntity) projectile;
-            if (aae.getShooter() instanceof LivingEntity) {
-                entity = (LivingEntity) aae.getShooter();
+    /*
+    A creeper spawns a cloud effect on death that applies all potions that was affecting it to entities that walk
+    through it. I remove the effects added by a shroud to prevent abuse, and just to make it safer for players.
+    Because if a creeper was affected by all the effects a shroud can produce, the cloud would be an enormous problem.
+    */
+    @SubscribeEvent
+    public static void onEntityJoinWorld(EntityJoinWorldEvent event) {
+        Entity entity = event.getEntity();
+        if (entity instanceof AreaEffectCloudEntity) {
+            AreaEffectCloudEntity effectCloud = (AreaEffectCloudEntity) entity;
+            effectCloud.effects.removeIf(EffectInstance::isAmbient);
+            if (effectCloud.effects.size() <= 0) {
+                event.setCanceled(true);
             }
         }
+    }
 
+    /*
+    Why this and not a cancel of the ExplosionEvent.Start event? Because I still want the sound and particle effects.
+    */
+    @SubscribeEvent
+    public static void onCreeperDetonate(ExplosionEvent.Detonate event) {
+        Entity exploder = event.getExplosion().getExploder();
+        if (exploder instanceof CreeperEntity && ((CreeperEntity) exploder).isPotionActive(ModObjects.DAMPEN.get())) {
+            event.getAffectedBlocks().clear();
+            event.getAffectedEntities().clear();
+        }
+    }
 
-        if (entity != null && entity.isPotionActive(Effects.NAUSEA)) {
+    public static float nauseaInaccuracy(ProjectileEntity projectile) {
+        // Get the owner/shooter of the projectile
+        LivingEntity entity = (LivingEntity) projectile.func_234616_v_();
+
+        // Players already have a hard time with the screen warping effect of nausea. No need to punish them further.
+        if (entity != null && !(entity instanceof PlayerEntity) && entity.isPotionActive(Effects.NAUSEA)) {
             return 1 + entity.getActivePotionEffect(Effects.NAUSEA).getAmplifier();
         }
         return 0.0f;

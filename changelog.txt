@@ -1,0 +1,11 @@
+## 1.16.5 - 1.1.0
+- Updated to 1.16.5.
+- Removed Blindness as an effect option. It trivialized most other effects, i.e. if you have Blindness active, there was no reason to use Nausea (which reduces ranged accuracy) since the mobs couldn't see you anyway.
+- Removed Weight potion effect. As pointed out on reddit, the benefit of this effect just wasn't worth the cost of materials to make a Shroud.
+- Removed Glowing as an effect option. Similar to Weight above, but also was only niche or temporarily used.
+- Added Binding. Level 1 prevents Enderman from teleporting. Level 2 also affects Shulkers. Requires a level 2 Shroud.
+- Added Frailty. Increases critical strike damage against affected mobs per level. Requires a level 3 Shroud.
+- Added Dampen. Creeper explosions don't destroy blocks or deal damage. Requires a level 4 Shroud.
+
+## 1.15.2 - 1.0.0
+- Initial release

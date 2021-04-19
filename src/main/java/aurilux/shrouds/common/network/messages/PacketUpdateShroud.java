@@ -25,16 +25,16 @@ public class PacketUpdateShroud {
     }
 
     public static class Handler {
-        public static void handle(final PacketUpdateShroud packet, final Supplier<NetworkEvent.Context> context) {
-            context.get().enqueueWork(() -> {
-                PlayerEntity player = context.get().getSender();
+        public static void handle(final PacketUpdateShroud packet, final Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                PlayerEntity player = ctx.get().getSender();
                 if (player != null) {
                     if (player.openContainer instanceof ShroudContainer) {
                         ((ShroudContainer) player.openContainer).handleSlots(packet.primaryEffect, packet.secondaryEffect);
                     }
                 }
             });
-            context.get().setPacketHandled(true);
+            ctx.get().setPacketHandled(true);
         }
     }
 }
