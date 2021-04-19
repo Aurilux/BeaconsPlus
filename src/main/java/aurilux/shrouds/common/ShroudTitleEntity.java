@@ -5,7 +5,8 @@ import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.CreatureEntity;
+import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
@@ -15,6 +16,7 @@ import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.LockableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -28,6 +30,7 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
@@ -37,10 +40,10 @@ import java.util.stream.Collectors;
 
 public class ShroudTitleEntity extends TileEntity implements INamedContainerProvider, ITickableTileEntity {
     public static final Effect[][] EFFECTS_LIST = new Effect[][]{
-            {Effects.SLOWNESS, Effects.NAUSEA},
-            {Effects.WEAKNESS, Effects.BLINDNESS},
-            {ModObjects.WEIGHT.get()},
-            {Effects.GLOWING}};
+            {Effects.WEAKNESS, Effects.NAUSEA},
+            {Effects.SLOWNESS, ModObjects.BINDING.get()},
+            {ModObjects.FRAILTY.get()},
+            {ModObjects.DAMPEN.get()}};
     private static final Set<Effect> VALID_EFFECTS = Arrays.stream(EFFECTS_LIST).flatMap(Arrays::stream).collect(Collectors.toSet());
     private List<ShroudTitleEntity.BeamSegment> beamSegments = Lists.newArrayList();
     private List<ShroudTitleEntity.BeamSegment> segmentSize = Lists.newArrayList();
@@ -143,7 +146,7 @@ public class ShroudTitleEntity extends TileEntity implements INamedContainerProv
         int levelsBefore = this.levels;
         if (this.world.getGameTime() % 80L == 0L) {
             if (!this.beamSegments.isEmpty()) {
-                this.sendBeam(x, y, z);
+                this.checkBeaconLevel(x, y, z);
             }
 
             if (this.levels > 0 && !this.beamSegments.isEmpty()) {
@@ -169,7 +172,7 @@ public class ShroudTitleEntity extends TileEntity implements INamedContainerProv
         }
     }
 
-    private void sendBeam(int posX, int posY, int posZ) {
+    private void checkBeaconLevel(int posX, int posY, int posZ) {
         this.levels = 0;
         for(int i = 1; i <= 4; this.levels = i++) {
             int y = posY - i;
@@ -180,7 +183,7 @@ public class ShroudTitleEntity extends TileEntity implements INamedContainerProv
             boolean beaconVerified = true;
             for(int x = posX - i; x <= posX + i && beaconVerified; x++) {
                 for(int z = posZ - i; z <= posZ + i; z++) {
-                    if (!this.world.getBlockState(new BlockPos(x, y, z)).isBeaconBase(this.world, new BlockPos(x, y, z), getPos())) {
+                    if (!this.world.getBlockState(new BlockPos(x, y, z)).isIn(BlockTags.BEACON_BASE_BLOCKS)) {
                         beaconVerified = false;
                         break;
                     }
@@ -204,18 +207,20 @@ public class ShroudTitleEntity extends TileEntity implements INamedContainerProv
             double radius = (this.levels * 10) + 10;
 
             AxisAlignedBB axisalignedbb = new AxisAlignedBB(this.pos).grow(radius).expand(0.0D, this.world.getHeight(), 0.0D);
-            List<MonsterEntity> list = this.world.getEntitiesWithinAABB(MonsterEntity.class, axisalignedbb);
+            List<CreatureEntity> list = this.world.getEntitiesWithinAABB(CreatureEntity.class, axisalignedbb);
+            // We only want to affect "monsters" (generally the hostile kind), and non-bosses
+            list.removeIf(c -> c.getType().getClassification() != EntityClassification.MONSTER || !c.isNonBoss());
 
             int duration = 60;
             int amplifier = (this.levels >= 4 && this.primaryEffect == this.secondaryEffect) ? 1 : 0;
 
-            for(MonsterEntity monsterEntity : list) {
-                monsterEntity.addPotionEffect(new EffectInstance(this.primaryEffect, duration, amplifier, true, true));
+            for(CreatureEntity creatureEntity : list) {
+                creatureEntity.addPotionEffect(new EffectInstance(this.primaryEffect, duration, amplifier, true, true));
             }
 
             if (this.levels >= 4 && this.secondaryEffect != null && this.primaryEffect != this.secondaryEffect) {
-                for(MonsterEntity monsterEntity : list) {
-                    monsterEntity.addPotionEffect(new EffectInstance(this.secondaryEffect, duration, 0, true, true));
+                for(CreatureEntity creatureEntity : list) {
+                    creatureEntity.addPotionEffect(new EffectInstance(this.secondaryEffect, duration, 0, true, true));
                 }
             }
         }
@@ -238,6 +243,7 @@ public class ShroudTitleEntity extends TileEntity implements INamedContainerProv
         return new SUpdateTileEntityPacket(this.pos, 3, this.getUpdateTag());
     }
 
+    @Nonnull
     @Override
     public CompoundNBT getUpdateTag() {
         return this.write(new CompoundNBT());
@@ -261,19 +267,20 @@ public class ShroudTitleEntity extends TileEntity implements INamedContainerProv
     }
 
     @Override
-    public void read(CompoundNBT compound) {
-        super.read(compound);
+    public void read(@Nonnull BlockState state, @Nonnull CompoundNBT compound) {
+        super.read(state, compound);
         this.primaryEffect = isBeaconEffect(compound.getInt("Primary"));
         this.secondaryEffect = isBeaconEffect(compound.getInt("Secondary"));
         if (compound.contains("CustomName", 8)) {
-            this.customName = ITextComponent.Serializer.fromJson(compound.getString("CustomName"));
+            this.customName = ITextComponent.Serializer.getComponentFromJson(compound.getString("CustomName"));
         }
 
         this.lock = LockCode.read(compound);
     }
 
+    @Nonnull
     @Override
-    public CompoundNBT write(CompoundNBT compound) {
+    public CompoundNBT write(@Nonnull CompoundNBT compound) {
         super.write(compound);
         compound.putInt("Primary", Effect.getId(this.primaryEffect));
         compound.putInt("Secondary", Effect.getId(this.secondaryEffect));
@@ -292,10 +299,11 @@ public class ShroudTitleEntity extends TileEntity implements INamedContainerProv
 
     @Override
     @Nullable
-    public Container createMenu(int id, PlayerInventory playerInv, PlayerEntity player) {
+    public Container createMenu(int id, @Nonnull PlayerInventory playerInv, @Nonnull PlayerEntity player) {
         return LockableTileEntity.canUnlock(player, this.lock, this.getDisplayName()) ? new ShroudContainer(id, playerInv, this.intArray, IWorldPosCallable.of(Objects.requireNonNull(this.world), this.getPos())) : null;
     }
 
+    @Nonnull
     @Override
     public ITextComponent getDisplayName() {
         return this.customName != null ? this.customName : new TranslationTextComponent("block.shrouds.shroud");

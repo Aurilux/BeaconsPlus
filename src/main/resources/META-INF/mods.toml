@@ -1,39 +1,40 @@
-# MANDATORY
+## MANDATORY
 # The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
 modLoader="javafml"
 # A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion="[31,)"
+loaderVersion="[35,)"
+license="GPL v3"
 
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]]
     # The modid of the mod
-    modId="shrouds"
+    modId="${mod_id}"
     # The version number of the mod
-    version="${file.jarVersion}"
+    version="${mod_version}"
     # A display name for the mod
-    displayName="Shrouds"
+    displayName="${mod_name}"
     # The description text for the mod (multi line!)
     description='''
-    Adds a beacon-like block whose effects only target hostile mobs'''
-    # OPTIONAL
+    ${mod_desc}'''
+    ## OPTIONAL
     # A text field displayed in the mod UI
-    authors="Aurilux"
+    authors="${mod_author}"
     # A text field displayed in the mod UI
     #credits="Thanks for this example mod goes to Java"
     # A file name (in the root of the mod JAR) containing a logo for display
-    logoFile="shrouds_logo.png"
+    logoFile="${mod_id}_logo.png"
     # A URL for the "homepage" for this mod, displayed in the mod UI
-    displayURL="https://minecraft.curseforge.com/projects/shrouds"
+    displayURL="${mod_url}"
     # A URL to refer people to when problems occur with this mod
-    issueTrackerURL="https://github.com/Aurilux/Shrouds/issues"
+    issueTrackerURL="${issue_url}"
     # A URL to query for updates for this mod
-    updateJSONURL="https://raw.githubusercontent.com/Aurilux/Shrouds/master/update.json"
+    updateJSONURL="${update_url}"
 
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.shrouds]]
     modId="forge" #mandatory
     mandatory=true #mandatory
-    versionRange="[31,)" #mandatory
+    versionRange="[35,)" #mandatory
     # An ordering relationship for the dependency - BEFORE or AFTER required if the relationship is not mandatory
     ordering="NONE"
     # Side this dependency is applied on - BOTH, CLIENT or SERVER

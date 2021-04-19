@@ -7,6 +7,7 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.IntArray;
@@ -16,7 +17,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class ShroudContainer extends Container {
     private final IInventory tileShroud = new Inventory(1) {
         public boolean isItemValidForSlot(int index, ItemStack stack) {
-            return stack.isBeaconPayment();
+            return stack.getItem().isIn(ItemTags.BEACON_PAYMENT_ITEMS);
         }
 
         public int getInventoryStackLimit() {
@@ -36,7 +37,7 @@ public class ShroudContainer extends Container {
         assertIntArraySize(array, 3);
         this.intArray = array;
         this.worldPos = worldPos;
-        this.beaconSlot = new ShroudSlot(this.tileShroud, 0, 136, 110);
+        this.beaconSlot = new ShroudContainer.ShroudSlot(this.tileShroud, 0, 136, 110);
         this.addSlot(this.beaconSlot);
         this.trackIntArray(array);
 
@@ -86,23 +87,28 @@ public class ShroudContainer extends Container {
                 }
 
                 slot.onSlotChange(itemstack1, itemstack);
-            } else if (this.mergeItemStack(itemstack1, 0, 1, false)) {
+            }
+            else if (this.mergeItemStack(itemstack1, 0, 1, false)) {
                 return ItemStack.EMPTY;
-            } else if (index < 28) {
+            }
+            else if (index < 28) {
                 if (!this.mergeItemStack(itemstack1, 28, 37, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (index < 37) {
+            }
+            else if (index < 37) {
                 if (!this.mergeItemStack(itemstack1, 1, 28, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.mergeItemStack(itemstack1, 1, 37, false)) {
+            }
+            else if (!this.mergeItemStack(itemstack1, 1, 37, false)) {
                 return ItemStack.EMPTY;
             }
 
             if (itemstack1.isEmpty()) {
                 slot.putStack(ItemStack.EMPTY);
-            } else {
+            }
+            else {
                 slot.onSlotChanged();
             }
 
@@ -149,7 +155,7 @@ public class ShroudContainer extends Container {
         }
 
         public boolean isItemValid(ItemStack stack) {
-            return stack.isBeaconPayment();
+            return stack.getItem().isIn(ItemTags.BEACON_PAYMENT_ITEMS);
         }
 
         public int getSlotStackLimit() {

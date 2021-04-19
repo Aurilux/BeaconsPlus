@@ -1,8 +1,9 @@
 package aurilux.shrouds.client;
 
 import aurilux.shrouds.common.ShroudTitleEntity;
+import aurilux.shrouds.common.ShroudsMod;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.tileentity.BeaconTileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
@@ -15,7 +16,7 @@ import java.util.List;
 
 @OnlyIn(Dist.CLIENT)
 public class ShroudTileEntityRenderer extends TileEntityRenderer<ShroudTitleEntity> {
-    public static final ResourceLocation TEXTURE_BEACON_BEAM = new ResourceLocation("textures/entity/beacon_beam.png");
+    public static final ResourceLocation TEXTURE_BEACON_BEAM = new ResourceLocation(ShroudsMod.ID, "textures/entity/shroud_beam.png");
 
     public ShroudTileEntityRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
         super(rendererDispatcherIn);
@@ -40,7 +41,8 @@ public class ShroudTileEntityRenderer extends TileEntityRenderer<ShroudTitleEnti
         dullColors[0] = dullColors[0] * .6f;
         dullColors[1] = dullColors[1] * .6f;
         dullColors[2] = dullColors[2] * .6f;
-        BeaconTileEntityRenderer.renderBeamSegment(matrixStackIn, bufferIn, TEXTURE_BEACON_BEAM, partialTicks, 1.0F, totalWorldTime, yOffset, height, dullColors, 0.2F, 0.25F);
+        //BeaconTileEntityRenderer.renderBeamSegment(matrixStackIn, bufferIn, TEXTURE_BEACON_BEAM, partialTicks, 1.0F, totalWorldTime, yOffset, height, dullColors, 0.2F, 0.25F);
+        BeaconTileEntityRenderer.renderBeamSegment(matrixStackIn, bufferIn, TEXTURE_BEACON_BEAM, partialTicks, 1.0F, totalWorldTime, yOffset, height, colors, 0.2F, 0.25F);
     }
 
     public boolean isGlobalRenderer(ShroudTitleEntity te) {
