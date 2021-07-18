@@ -1,0 +1,22 @@
+{
+  "result": {
+    "item": "beaconsplus:shroud"
+  },
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GGG",
+    "GNG",
+    "BBB"
+  ],
+  "key": {
+    "G": {
+      "tag": "forge:glass/black"
+    },
+    "N": {
+      "tag": "forge:nether_stars"
+    },
+    "B": {
+      "item": "minecraft:crying_obsidian"
+    }
+  }
+}

@@ -1,2 +1,2 @@
-# Shrouds
-Adds a beacon-like block whose effects only target hostile mobs
+# BeaconsPlus
+Adds two vanilla-friendly beacon variants: the Shroud (which affects hostile mobs), and the Lush (which affects plants and animals).

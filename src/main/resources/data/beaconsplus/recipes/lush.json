@@ -1,0 +1,22 @@
+{
+  "result": {
+    "item": "beaconsplus:lush"
+  },
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GGG",
+    "GNG",
+    "BBB"
+  ],
+  "key": {
+    "G": {
+      "tag": "forge:glass/lime"
+    },
+    "N": {
+      "tag": "forge:nether_stars"
+    },
+    "B": {
+      "item": "minecraft:shroomlight"
+    }
+  }
+}
